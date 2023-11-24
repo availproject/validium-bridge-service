@@ -24,7 +24,7 @@ L1URL = "http://zkevm-mock-l1-network:8545"
 L2URLs = ["http://zkevm-node:8123"]
 
 [Synchronizer]
-SyncInterval = "1s"
+SyncInterval = "10s"
 SyncChunkSize = 100
 
 [BridgeController]

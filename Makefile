@@ -13,7 +13,7 @@ DOCKER_COMPOSE_BRIDGE := zkevm-bridge-service
 RUN_STATE_DB := $(DOCKER_COMPOSE) up -d $(DOCKER_COMPOSE_STATE_DB)
 RUN_POOL_DB := $(DOCKER_COMPOSE) up -d $(DOCKER_COMPOSE_POOL_DB)
 RUN_BRIDGE_DB := $(DOCKER_COMPOSE) up -d $(DOCKER_COMPOSE_BRIDGE_DB)
-RUN_DBS := ${RUN_BRIDGE_DB} && ${RUN_STATE_DB} && ${RUN_POOL_DB}
+RUN_DBS := ${RUN_BRIDGE_DB}
 RUN_NODE := $(DOCKER_COMPOSE) up -d $(DOCKER_COMPOSE_ZKEVM_NODE)
 RUN_L1_NETWORK := $(DOCKER_COMPOSE) up -d $(DOCKER_COMPOSE_L1_NETWORK)
 RUN_ZKPROVER := $(DOCKER_COMPOSE) up -d $(DOCKER_COMPOSE_ZKPROVER)
@@ -134,12 +134,7 @@ restart: stop run ## Executes `make stop` and `make run` commands
 .PHONY: run
 run: stop ## runs all services
 	$(RUN_DBS)
-	$(RUN_L1_NETWORK)
 	sleep 5
-	$(RUN_ZKPROVER)
-	sleep 3
-	$(RUN_NODE)
-	sleep 7
 	$(RUN_BRIDGE)
 
 .PHONY: update-external-dependencies

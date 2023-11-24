@@ -1,44 +1,13 @@
 version: '3.5'
+networks:
+  zkevm:
+    external: true
 services:
-  zkevm-state-db:
-    container_name: zkevm-state-db
-    image: postgres
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 1G
-    ports:
-      - 5432:5432
-    volumes:
-      - ./test/config/prover/initproverdb.sql:/docker-entrypoint-initdb.d/init.sql
-    environment:
-      - POSTGRES_USER=state_user
-      - POSTGRES_PASSWORD=state_password
-      - POSTGRES_DB=state_db
-    command: ["postgres", "-N", "500"]
-
-  zkevm-pool-db:
-    container_name: zkevm-pool-db
-    image: postgres
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 1G
-    ports:
-      - 5433:5432
-    environment:
-      - POSTGRES_USER=pool_user
-      - POSTGRES_PASSWORD=pool_password
-      - POSTGRES_DB=pool_db
-    command: ["postgres", "-N", "500"]
-
   zkevm-bridge-db:
     container_name: zkevm-bridge-db
     image: postgres
+    networks:
+      - zkevm
     deploy:
       resources:
         limits:
@@ -46,59 +15,20 @@ services:
         reservations:
           memory: 1G
     expose:
-      - 5435
+      - 5436
     ports:
-      - 5435:5432
+      - 5436:5432
     environment:
       - POSTGRES_USER=test_user
       - POSTGRES_PASSWORD=test_password
       - POSTGRES_DB=test_db
     command: ["postgres", "-N", "500"]
-
-  zkevm-node:
-    container_name: zkevm-node
-    image: hermeznetwork/zkevm-node:v0.3.1
-    ports:
-      - 8123:8123
-      - 61090:61090
-    environment:
-      - ZKEVM_NODE_STATEDB_HOST=zkevm-state-db
-      - ZKEVM_NODE_POOL_HOST=zkevm-pool-db
-      - ZKEVM_NODE_RPC_DB_HOST=zkevm-rpc-db
-      - ZKEVM_NODE_ETHERMAN_PRIVATEKEYPATH=/pk/keystore
-    volumes:
-      - ./test/test.keystore.sequencer:/pk/keystore.sequencer
-      - ./test/test.keystore.aggregator:/pk/keystore.aggregator
-      - ./test/config/node/config.zkevm.node.toml:/app/config.toml
-      - ./test/config/node/genesis.local.json:/app/genesis.json
-    command: 
-      - "/bin/sh"
-      - "-c"
-      - "/app/zkevm-node approve --network custom --custom-network-file /app/genesis.json --am 115792089237316195423570985008687907853269984665640564039457584007913129639935 -y --cfg /app/config.toml --key-store-path /pk/keystore.sequencer --password testonly &&
-         /app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components \"synchronizer,rpc,sequencer,sequence-sender,aggregator,eth-tx-manager,l2gaspricer\""
-
-  zkevm-mock-l1-network:
-    container_name: zkevm-local-l1-network
-    image: hermeznetwork/geth-zkevm-contracts:v2.0.0-RC1-fork.5-geth1.12.0
-    ports:
-      - 8545:8545
-
-  zkevm-prover:
-    container_name: zkevm-prover
-    image: hermeznetwork/zkevm-prover:v2.2.3
-    ports:
-      - 50051:50051 # Prover
-      - 50052:50052 # MockProver
-      - 50061:50061 # MT
-      - 50071:50071 # Executor
-    volumes:
-      - ./test/config/prover/config.prover.json:/usr/src/app/config.json
-    command: >
-      zkProver -c /usr/src/app/config.json
-
+    
   zkevm-bridge-service:
     container_name: zkevm-bridge-service
     image: zkevm-bridge-service
+    networks:
+      - zkevm
     ports:
       - 8080:8080
       - 9090:9090
